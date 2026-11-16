@@ -82,6 +82,7 @@
     const errorBox = document.getElementById('error');
     errorBox.innerText = 'Загрузка...';
 
+    window.location.href = "catroid://auth?uid=" + user.uid + "&name=" + encodeURIComponent(finalName);
     try {
       let userCredential;
       if (isRegister) {
