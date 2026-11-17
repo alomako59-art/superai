@@ -66,6 +66,8 @@
 
   let isRegister = false;
 
+  signOut(auth).catch(() => {});
+
   // Автоматическая проверка: если юзер уже был залогинен ранее, сайт сам подхватит сессию
   onAuthStateChanged(auth, (user) => {
     if (user) {
