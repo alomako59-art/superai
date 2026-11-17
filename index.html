@@ -50,7 +50,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBAx10SsLG5ClLzT71Fex4NgpkP5VtvOC4",
@@ -65,6 +65,14 @@
   const auth = getAuth(app);
 
   let isRegister = false;
+
+  // Автоматическая проверка: если юзер уже был залогинен ранее, сайт сам подхватит сессию
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      const finalName = user.displayName || "Пользователь";
+      successLogin(user.uid, finalName);
+    }
+  });
 
   window.toggleMode = function() {
     isRegister = !isRegister;
@@ -95,25 +103,29 @@
       }
 
       const finalName = currentUser.displayName || nickname || "Пользователь";
-      
-      // Формируем чистый токен для игры
-      const authData = "AUTH_OK|" + currentUser.uid + "|" + finalName;
-
-      // Автоматически копируем в буфер обмена
-      navigator.clipboard.writeText(authData).catch(() => {});
-
-      // Рисуем красивый экран успеха с кнопкой копирования вручную (на случай если автокопирование заблокирует WebView)
-      document.getElementById('formCard').innerHTML = `
-        <h2 style="color: #4ade80; margin-top: 0;">Вход выполнен!</h2>
-        <p style="color: #a1a1aa; font-size: 14px; text-align: center;">Привет, <b>${finalName}</b>!</p>
-        <p style="color: #facc15; font-size: 13px; text-align: center; margin: 15px 0;">Твой код авторизации скопирован в буфер обмена. Вернись в игру и вставь его в поле ввода!</p>
-        <button onclick="navigator.clipboard.writeText('${authData}'); alert('Код скопирован!');" style="background: #16a34a;">Скопировать код еще раз</button>
-      `;
+      successLogin(currentUser.uid, finalName);
 
     } catch (err) {
       console.error("Ошибка Firebase:", err);
       errorBox.innerText = "Ошибка (" + err.code + "): " + err.message;
     }
+  }
+
+  function successLogin(uid, name) {
+    const authData = "AUTH_OK|" + uid + "|" + name;
+    
+    // Копируем в буфер (на всякий случай, если нужно для подстраховки)
+    navigator.clipboard.writeText(authData).catch(() => {});
+
+    // Меняем экран на красивое сообщение об успехе
+    document.getElementById('formCard').innerHTML = `
+      <h2 style="color: #4ade80; margin-top: 0;">Вход выполнен!</h2>
+      <p style="color: #a1a1aa; font-size: 14px; text-align: center;">Привет, <b>${name}</b>!</p>
+      <p style="color: #facc15; font-size: 13px; text-align: center; margin: 15px 0;">Авторизация прошла успешно. Можешь закрыть это окно или вернуться в игру.</p>
+    `;
+
+    // Меняем заголовок страницы (игра может его прочитать, если захочет)
+    document.title = authData;
   }
 </script>
 
