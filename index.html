@@ -82,25 +82,27 @@
     const errorBox = document.getElementById('error');
     errorBox.innerText = 'Загрузка...';
 
-    window.location.href = "catroid://auth?uid=" + user.uid + "&name=" + encodeURIComponent(finalName);
     try {
-      let userCredential;
+      let currentUser;
       if (isRegister) {
         if (!nickname) throw new Error("Введи никнейм!");
-        userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        await updateProfile(userCredential.user, { displayName: nickname });
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        currentUser = userCredential.user;
+        await updateProfile(currentUser, { displayName: nickname });
       } else {
-        userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        currentUser = userCredential.user;
       }
 
-      const user = userCredential.user;
-      const finalName = user.displayName || nickname || "Пользователь";
+      const finalName = currentUser.displayName || nickname || "Пользователь";
+      errorBox.innerText = "Успех!";
       
-      document.title = "AUTH_OK|" + user.uid + "|" + finalName;
-      window.location.href = "catroid://auth?uid=" + user.uid + "&name=" + encodeURIComponent(finalName);
+      document.title = "AUTH_OK|" + currentUser.uid + "|" + finalName;
+      window.location.href = "catroid://auth?uid=" + currentUser.uid + "&name=" + encodeURIComponent(finalName);
 
     } catch (err) {
-      errorBox.innerText = "Ошибка: " + err.message;
+      console.error("Ошибка Firebase:", err);
+      errorBox.innerText = "Ошибка (" + err.code + "): " + err.message;
     }
   }
 </script>
